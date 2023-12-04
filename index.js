@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 // const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const port = process.env.port || 5000;
 
@@ -25,22 +25,47 @@ async function run() {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
 
-    const userCollection = client.db("assignment12DB").collection("users");
+    const usersCollection = client.db("assignment12").collection("users");
+    const userCollection = client.db("assignment12").collection("user");
 
     // users collection api
+
     app.post("/users", async (req, res) => {
       const user = req.body;
       // insert email if user already exists
       // can do many ways(1. email unique 2. upsert 3. simple checking)
       const query = { email: user.email };
-      const exitingUser = await userCollection.findOne(query);
+      const exitingUser = await usersCollection.findOne(query);
       if (exitingUser) {
         return res.send({ message: "User already exists", insertedId: null });
       }
-      const result = await userCollection.insertOne(user);
+      const result = await usersCollection.insertOne(user);
+      res.send(result);
+    });
+    app.get("/users", async (req, res) => {
+      const result = await usersCollection.find().toArray();
       res.send(result);
     });
 
+    app.get("/users/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
+    // user collection api
+    app.get("/user", async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    });
+
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await userCollection.findOne(query);
+      res.send(result);
+    });
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log(
